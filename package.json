@@ -13,7 +13,12 @@
     "./tui": {
       "import": "./tui.tsx",
       "config": {
-        "enabled": true
+        "enabled": true,
+        "logo": {
+          "enabled": true,
+          "mode": "random",
+          "selected": "rhodes"
+        }
       }
     }
   },
