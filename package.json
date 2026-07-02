@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "oc-plugin-arknights",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./server": {
+      "import": "./server.ts",
+      "config": {
+        "enabled": true
+      }
+    },
+    "./tui": {
+      "import": "./tui.tsx",
+      "config": {
+        "enabled": true
+      }
+    }
+  },
+  "engines": {
+    "opencode": ">=1.14.48"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": "*",
+    "@opentui/core": "*",
+    "@opentui/solid": "*",
+    "solid-js": "*"
+  }
+}
