@@ -180,10 +180,7 @@ const Home = (props: { theme: TuiThemeCurrent; logos: LogoSet }) => {
           width: Math.max(0, term.width - own.width),
           height: Math.max(0, term.height - own.height),
         }
-        setGap((prev) => ({
-          width: prev.width > 0 ? Math.min(prev.width, next.width) : next.width,
-          height: prev.height > 0 ? Math.min(prev.height, next.height) : next.height,
-        }))
+        setGap(next)
       }}
       flexDirection="column"
       alignItems="center"

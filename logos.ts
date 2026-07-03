@@ -75,10 +75,17 @@ const cache = new Map<string, LogoSet>()
 export function getLogo(id: string): LogoSet {
   let entry = cache.get(id)
   if (!entry) {
+    const readSafe = (name: string) => {
+      try {
+        return readFileSync(join(LOGOS_DIR, name), "utf-8")
+      } catch {
+        return ""
+      }
+    }
     entry = {
-      sm: readFileSync(join(LOGOS_DIR, `logo_${id}_sm.txt`), "utf-8"),
-      md: readFileSync(join(LOGOS_DIR, `logo_${id}_md.txt`), "utf-8"),
-      lg: readFileSync(join(LOGOS_DIR, `logo_${id}_lg.txt`), "utf-8"),
+      sm: readSafe(`logo_${id}_sm.txt`),
+      md: readSafe(`logo_${id}_md.txt`),
+      lg: readSafe(`logo_${id}_lg.txt`),
     }
     cache.set(id, entry)
   }
