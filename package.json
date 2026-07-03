@@ -18,6 +18,10 @@
           "enabled": true,
           "mode": "random",
           "selected": "rhodes"
+        },
+        "sound_pack": {
+          "enabled": true,
+          "override": true
         }
       }
     }
