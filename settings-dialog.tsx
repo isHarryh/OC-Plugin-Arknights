@@ -15,11 +15,12 @@ export type LogoMode = "fixed" | "random"
 
 export interface LogoSettings {
   enabled: boolean
+  padding: "large" | "small"
   mode: LogoMode
   selected: string
 }
 
-type LogoField = "logoEnabled" | "logoMode" | "logoSelected"
+type LogoField = "logoEnabled" | "logoPadding" | "logoMode" | "logoSelected"
 
 type SoundField = "soundEnabled" | "soundOverride" | `sound_${AttentionEvent}`
 
@@ -45,8 +46,18 @@ const logoRows = (
     kind: "toggle",
   },
   {
+    key: "logoPadding",
+    title: "- Home logo padding",
+    category: "Visual",
+    kind: "select",
+    options: [
+      { value: "large", label: "Large" },
+      { value: "small", label: "Small" },
+    ],
+  },
+  {
     key: "logoMode",
-    title: "- Selection mode",
+    title: "Logo selection mode",
     category: "Visual",
     kind: "select",
     options: [
@@ -57,7 +68,6 @@ const logoRows = (
   {
     key: "logoSelected",
     title: "- Selected logo",
-    description: "Fixed mode only",
     category: "Visual",
     kind: "select",
     options: logoIds.map((id) => ({
@@ -119,7 +129,20 @@ export const SettingsDialog = (props: {
   soundSettings: () => SoundConfig
   onSoundSettingsChange: (settings: SoundConfig) => void
 }) => {
-  const rows = createMemo(() => getRows(props.logoIds, props.displayNames))
+  const allRows = createMemo(() => getRows(props.logoIds, props.displayNames))
+
+  const rows = createMemo(() => {
+    const sound = props.soundSettings()
+    const logo = props.value().logo
+    return allRows().filter((r) => {
+      if (r.key === "logoPadding") return logo.enabled
+      if (r.key === "logoSelected") return logo.mode === "fixed"
+      if (r.key.startsWith("sound_")) return sound.enabled && sound.override
+      if (r.key === "soundOverride") return sound.enabled
+      return true
+    })
+  })
+
   const [cur, setCur] = createSignal<SettingField>("logoEnabled")
   const theme = createMemo(() => props.api.theme.current)
   const DialogSelect = props.api.ui.DialogSelect
@@ -136,6 +159,8 @@ export const SettingsDialog = (props: {
       let footer: string
       if (item.key === "logoEnabled") {
         footer = status(value.logo.enabled)
+      } else if (item.key === "logoPadding") {
+        footer = value.logo.padding === "large" ? "Large" : "Small"
       } else if (item.key === "logoMode") {
         footer = modeLabel(value.logo.mode)
       } else if (item.key === "logoSelected") {
@@ -182,17 +207,20 @@ export const SettingsDialog = (props: {
       return
     }
 
-    if ((evt.name === "left" || evt.name === "right") && item.kind === "select") {
+    if ((evt.name === "left" || evt.name === "right" || evt.name === "space" || evt.name === "enter") && item.kind === "select") {
       evt.preventDefault()
       evt.stopPropagation()
       const logo = props.value().logo
-      if (item.key === "logoMode") {
+      if (item.key === "logoPadding") {
+        const next = logo.padding === "large" ? "small" : "large"
+        props.update("padding", next)
+      } else if (item.key === "logoMode") {
         const next = logo.mode === "fixed" ? "random" : "fixed"
         props.update("mode", next)
       } else if (item.key === "logoSelected") {
         const opts = item.options!
         const idx = opts.findIndex((o) => o.value === logo.selected)
-        const delta = evt.name === "right" ? 1 : -1
+        const delta = evt.name === "left" ? -1 : 1
         const nextIdx = (idx + delta + opts.length) % opts.length
         props.update("selected", opts[nextIdx].value)
       } else if (item.key.startsWith("sound_")) {
@@ -200,7 +228,7 @@ export const SettingsDialog = (props: {
         const opts = item.options!
         const currentVal = props.soundSettings().mappings[event] ?? ""
         const idx = opts.findIndex((o) => o.value === currentVal)
-        const delta = evt.name === "right" ? 1 : -1
+        const delta = evt.name === "left" ? -1 : 1
         const nextIdx = (idx + delta + opts.length) % opts.length
         const next = opts[nextIdx].value
         const newMappings = { ...props.soundSettings().mappings }

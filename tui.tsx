@@ -21,6 +21,7 @@ const command = {
 
 type LogoCfg = {
   enabled: boolean
+  padding: "large" | "small"
   mode: "fixed" | "random"
   selected: string
 }
@@ -60,6 +61,7 @@ const cfg = (opts: Record<string, unknown> | undefined): Cfg => {
     enabled: bool(opts?.enabled, true),
     logo: {
       enabled: bool(logo?.enabled, true),
+      padding: pickStr(logo?.padding, "large", ["large", "small"] as const),
       mode: pickStr(logo?.mode, "random", ["fixed", "random"] as const),
       selected: pickStr(logo?.selected, "rhodes", logoIds),
     },
@@ -73,6 +75,7 @@ const cfg = (opts: Record<string, unknown> | undefined): Cfg => {
 
 const settingKey = {
   logoEnabled: `${id}.logo.enabled`,
+  logoPadding: `${id}.logo.padding`,
   logoMode: `${id}.logo.mode`,
   logoSelected: `${id}.logo.selected`,
   soundPackEnabled: `${id}.sound_pack.enabled`,
@@ -80,12 +83,14 @@ const settingKey = {
   soundPackMappings: `${id}.sound_pack.mappings`,
 } as const
 
-type LogoField = "enabled" | "mode" | "selected"
+type LogoField = "enabled" | "padding" | "mode" | "selected"
 
 const logoFieldToKV = (field: LogoField): string => {
   switch (field) {
     case "enabled":
       return settingKey.logoEnabled
+    case "padding":
+      return settingKey.logoPadding
     case "mode":
       return settingKey.logoMode
     case "selected":
@@ -118,6 +123,11 @@ const withKV = (api: TuiPluginApi, value: Cfg): Cfg => {
     ...value,
     logo: {
       enabled: bool(api.kv.get(settingKey.logoEnabled, value.logo.enabled), value.logo.enabled),
+      padding: pickStr(
+        api.kv.get(settingKey.logoPadding, value.logo.padding),
+        value.logo.padding,
+        ["large", "small"] as const,
+      ),
       mode: pickStr(api.kv.get(settingKey.logoMode, value.logo.mode), value.logo.mode, ["fixed", "random"] as const),
       selected: pickStr(
         api.kv.get(settingKey.logoSelected, value.logo.selected),
@@ -150,15 +160,14 @@ function logoLines(logo: string): string[] {
   return logo.split("\n")
 }
 
-const Home = (props: { theme: TuiThemeCurrent; logos: LogoSet }) => {
+const Home = (props: { theme: TuiThemeCurrent; logos: LogoSet; padding: number }) => {
   const dim = useTerminalDimensions()
-  const [gap, setGap] = createSignal({ width: 0, height: 0 })
 
   const current = createMemo(() => {
     const term = dim()
-    const chrome = gap()
-    const h = Math.max(0, term.height - chrome.height)
-    const w = Math.max(0, term.width - chrome.width)
+    const pad = props.padding
+    const h = Math.max(0, term.height - pad)
+    const w = Math.max(0, term.width - pad)
 
     for (let i = sizes.length - 1; i >= 0; i--) {
       const size = sizes[i]
@@ -172,19 +181,7 @@ const Home = (props: { theme: TuiThemeCurrent; logos: LogoSet }) => {
   })
 
   return (
-    <box
-      onSizeChange={function () {
-        const term = dim()
-        const own = { width: this.width, height: this.height }
-        const next = {
-          width: Math.max(0, term.width - own.width),
-          height: Math.max(0, term.height - own.height),
-        }
-        setGap(next)
-      }}
-      flexDirection="column"
-      alignItems="center"
-    >
+    <box flexDirection="column" alignItems="center">
       {(() => {
         const { lines, isDefault } = current()
         return lines.map((line, i) => (
@@ -332,7 +329,7 @@ const tui: TuiPlugin = async (api, options) => {
       home_logo(ctx) {
         return (
           <Show when={value().logo.enabled}>
-            <Home theme={ctx.theme.current} logos={activeLogo()} />
+            <Home theme={ctx.theme.current} logos={activeLogo()} padding={value().logo.padding === "large" ? 16 : 8} />
           </Show>
         )
       },
