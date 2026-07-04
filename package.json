@@ -3,6 +3,10 @@
   "name": "oc-plugin-arknights",
   "version": "0.1.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isHarryh/OC-Plugin-Arknights.git"
+  },
   "exports": {
     "./server": {
       "import": "./server.ts",

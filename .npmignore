@@ -1,0 +1,15 @@
+*
+!LICENSE
+!README.md
+!package.json
+!logos.ts
+!server.ts
+!tui.tsx
+!settings-dialog.tsx
+!sound-pack.ts
+!config-patch.ts
+!assets/
+!assets/logos/
+!assets/logos/*.txt
+!assets/audio/
+!assets/audio/*.mp3
