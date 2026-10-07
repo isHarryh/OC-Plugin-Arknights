@@ -5,3 +5,5 @@ overrides:
   # GHSA-p6vx-979v-rg4c / CVE-2026-104846
   seroval: ~1.6.8
   seroval-plugins: ~1.6.8
+  # audit: @opentui/solid pins the vulnerable @babel/core 7.28.0 exactly
+  "@babel/core": ^7.29.6
