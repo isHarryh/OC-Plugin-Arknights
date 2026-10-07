@@ -44,7 +44,8 @@ const pickStr = <T extends string>(value: unknown, fallback: T, valid: readonly 
   return value as T
 }
 
-export const cfg = (opts: Record<string, unknown> | undefined): Cfg => {
+export const cfg = (options: unknown): Cfg => {
+  const opts = rec(options)
   const logo = rec(opts?.logo)
   const soundPack = rec(opts?.sound_pack)
   return {

@@ -232,7 +232,7 @@ const SettingsDialog = (props: {
 }
 
 const tui: TuiPlugin = async (api, options) => {
-  const boot = cfg(rec(options))
+  const boot = cfg(options)
   if (!boot.enabled) return
 
   const [value, setValue] = createSignal(withKV(api, boot))
