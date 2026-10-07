@@ -1,2 +1,7 @@
 allowBuilds:
   msgpackr-extract: false
+
+overrides:
+  # GHSA-p6vx-979v-rg4c / CVE-2026-104846
+  seroval: ~1.6.8
+  seroval-plugins: ~1.6.8
