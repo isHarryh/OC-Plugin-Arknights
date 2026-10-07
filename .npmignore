@@ -5,9 +5,10 @@
 !logos.ts
 !server.ts
 !tui.tsx
-!settings-dialog.tsx
 !sound-pack.ts
 !config-patch.ts
+!settings.ts
+!settings-rows.ts
 !assets/
 !assets/logos/
 !assets/logos/*.txt
