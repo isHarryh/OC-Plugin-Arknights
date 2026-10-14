@@ -1,45 +1,25 @@
 /*
- * Reads and patches the user's tui.json to apply attention sound mappings.
- * Supports two config scopes:
- *   - "user":    ~/.config/opencode/tui.json (default)
- *   - "project": .opencode/tui.json (project-local, requires restart)
+ * Patches the global cli.json so the TUI plays the sound pack's attention sounds.
  *
- * OpenCode reads tui.json at startup; changes require a restart to take effect.
+ * OpenCode V2 only reads the CLI config from the global config directory
+ * (`$OPENCODE_CONFIG_DIR` or `$XDG_CONFIG_HOME/opencode` or `~/.config/opencode`),
+ * so there is no project scope to write to.
+ *
+ * `attention.sounds` values must be plain filesystem paths: the TUI loads them
+ * with `fs.readFile`, so file URLs fail and fall back to the built-in sounds.
+ * The running TUI watches the config directory and reloads on change.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { dirname, join } from "node:path"
-import { pathToFileURL } from "node:url"
 import { attentionEvents, getSoundPath, type SoundMappings } from "./sound-pack"
 
-export type ConfigScope = "user" | "project"
-
-export function getConfigPath(scope: ConfigScope): string {
-  const env = process.env.OPENCODE_TUI_CONFIG
-  if (env) return env
-  if (scope === "user") {
-    return join(homedir(), ".config", "opencode", "tui.json")
-  }
-  return join(process.cwd(), ".opencode", "tui.json")
-}
-
-function readOrCreateConfig(path: string): Record<string, unknown> {
-  if (existsSync(path)) {
-    return JSON.parse(readFileSync(path, "utf-8"))
-  }
-  mkdirSync(dirname(path), { recursive: true })
-  return {}
-}
-
-function writeConfig(path: string, config: Record<string, unknown>): void {
-  writeFileSync(path, JSON.stringify(config, null, 2) + "\n", "utf-8")
-}
+const SCHEMA_URL = "https://opencode.ai/v2/cli.json"
 
 export interface PatchResult {
   success: boolean
   path: string
-  scope: ConfigScope
   message: string
 }
 
@@ -49,32 +29,50 @@ export interface SoundConfig {
   mappings: SoundMappings
 }
 
-export function applySoundConfig(
-  config: SoundConfig,
-  scope: ConfigScope,
-): PatchResult {
-  const configPath = getConfigPath(scope)
+export function getConfigPath(): string {
+  const configDir = process.env.OPENCODE_CONFIG_DIR
+  if (configDir) return join(configDir, "cli.json")
+  const base = process.env.XDG_CONFIG_HOME || join(homedir(), ".config")
+  return join(base, "opencode", "cli.json")
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function readOrCreateConfig(path: string): Record<string, unknown> {
+  if (existsSync(path)) {
+    const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"))
+    return isRecord(parsed) ? parsed : {}
+  }
+  mkdirSync(dirname(path), { recursive: true })
+  return { $schema: SCHEMA_URL }
+}
+
+function writeConfig(path: string, config: Record<string, unknown>): void {
+  writeFileSync(path, JSON.stringify(config, null, 2) + "\n", "utf-8")
+}
+
+export function applySoundConfig(config: SoundConfig): PatchResult {
+  const configPath = getConfigPath()
 
   try {
     const stored = readOrCreateConfig(configPath)
 
     const attn: Record<string, unknown> = {
-      ...(typeof stored.attention === "object" && stored.attention !== null
-        ? (stored.attention as Record<string, unknown>)
-        : {}),
+      ...(isRecord(stored.attention) ? stored.attention : {}),
     }
 
     if (!config.enabled) {
       attn.sound = false
     } else {
-      attn.enabled = true
       attn.sound = true
       if (config.override) {
         const sounds: Record<string, string> = {}
         for (const event of attentionEvents) {
           const file = config.mappings[event]
           if (!file) continue
-          sounds[event] = pathToFileURL(getSoundPath(file)).href
+          sounds[event] = getSoundPath(file)
         }
         attn.sounds = sounds
       } else {
@@ -88,15 +86,13 @@ export function applySoundConfig(
     return {
       success: true,
       path: configPath,
-      scope,
-      message: "Updated! Restart OpenCode for changes to take effect.",
+      message: "Updated! The sound settings apply immediately.",
     }
   } catch (err) {
     return {
       success: false,
       path: configPath,
-      scope,
-      message: `Failed to update tui.json: ${String(err)}`,
+      message: `Failed to update cli.json: ${String(err)}`,
     }
   }
 }

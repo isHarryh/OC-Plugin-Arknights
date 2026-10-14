@@ -1,13 +1,5 @@
 import { attentionEvents, audioFiles, getDisplayName, type AttentionEvent } from "./sound-pack"
-
-export type LogoMode = "fixed" | "random"
-
-export interface LogoSettings {
-  enabled: boolean
-  padding: "large" | "small"
-  mode: LogoMode
-  selected: string
-}
+import type { Settings } from "./settings"
 
 type LogoSettingKey = "logoEnabled" | "logoPadding" | "logoMode" | "logoSelected"
 
@@ -103,8 +95,34 @@ export const getRows = (logoIds: readonly string[], displayNames: Record<string,
   ...soundRows(),
 ]
 
+/** Dependent rows stay hidden while their parent setting is off. */
+export const isRowVisible = (row: SettingRow, settings: Settings): boolean => {
+  if (row.kind === "toggle") return true
+  if (row.key === "logoPadding") return settings.logo.enabled
+  if (row.key === "logoSelected") return settings.logo.mode === "fixed"
+  if (row.key === "soundOverride") return settings.sound_pack.enabled
+  if (row.key.startsWith("sound_")) return settings.sound_pack.enabled && settings.sound_pack.override
+  return true
+}
+
 export const status = (value: boolean) => (value ? "YES" : "NO")
 
-export const modeLabel = (mode: string) => (mode === "random" ? "Random" : "Fixed")
+/** Attention event a `sound_*` row configures. */
+export const soundEvent = (key: SettingField) => key.replace("sound_", "") as AttentionEvent
 
-export const currentLabel = (id: string, displayNames: Record<string, string>) => displayNames[id] ?? id
+/** Current value of a select row, used to preselect the value dialog. */
+export const rowValue = (row: SettingRow, settings: Settings): string => {
+  if (row.key === "logoPadding") return settings.logo.padding
+  if (row.key === "logoMode") return settings.logo.mode
+  if (row.key === "logoSelected") return settings.logo.selected
+  if (row.key.startsWith("sound_")) return settings.sound_pack.mappings[soundEvent(row.key)] ?? ""
+  return ""
+}
+
+export const rowFooter = (row: SettingRow, settings: Settings): string => {
+  if (row.key === "logoEnabled") return status(settings.logo.enabled)
+  if (row.key === "soundEnabled") return status(settings.sound_pack.enabled)
+  if (row.key === "soundOverride") return status(settings.sound_pack.override)
+  const value = rowValue(row, settings)
+  return row.options?.find((option) => option.value === value)?.label ?? ""
+}

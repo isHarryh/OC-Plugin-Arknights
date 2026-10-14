@@ -1,15 +1,13 @@
-// @ts-nocheck
-import type { Plugin } from "@opencode-ai/plugin"
+/*
+ * Server entrypoint. The plugin is purely a TUI plugin, but a server entry is
+ * kept so the package can be enabled from `opencode.json`. The CLI only loads
+ * a server plugin's TUI part once the server reports it as active.
+ */
+import { Plugin } from "@opencode/plugin"
 
-const id = "arknights"
-
-const server: Plugin = async (_input, _options?: Record<string, unknown>) => {
-  return {}
-}
-
-const plugin: { id: string; server: Plugin } = {
-  id,
-  server,
-}
+const plugin = Plugin.define({
+  id: "arknights",
+  setup() {},
+})
 
 export default plugin
