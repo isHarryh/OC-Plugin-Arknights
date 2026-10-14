@@ -1,12 +1,15 @@
 import { logoIds } from "./logos"
 import { defaultMappings, validateMappings, type SoundMappings } from "./sound-pack"
 
-export const id = "arknights"
+export const id = "oc-plugin-arknights"
 
 export const command = {
-  settings: "arknights.settings",
+  logoSettings: "arknights.logo-settings",
+  soundSettings: "arknights.sound-settings",
   applyAudioConfig: "arknights.apply-audio-config",
 }
+
+export const group = "Arknights"
 
 export type LogoPadding = "large" | "small"
 export type LogoMode = "fixed" | "random"

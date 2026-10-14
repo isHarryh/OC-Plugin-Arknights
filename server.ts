@@ -6,7 +6,7 @@
 import { Plugin } from "@opencode/plugin"
 
 const plugin = Plugin.define({
-  id: "arknights",
+  id: "oc-plugin-arknights",
   setup() {},
 })
 
