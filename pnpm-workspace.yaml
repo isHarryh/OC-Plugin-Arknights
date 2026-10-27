@@ -2,13 +2,13 @@ allowBuilds:
   msgpackr-extract: false
 
 minimumReleaseAgeExclude:
-  - "@opencode/ai@2.0.28"
-  - "@opencode/client@2.0.28"
-  - "@opencode/plugin@2.0.28"
-  - "@opencode/protocol@2.0.28"
-  - "@opencode/schema@2.0.28"
-  - "@opencode/theme@2.0.28"
-  - "@opencode/util@2.0.28"
+  - "@opencode/ai@2.2.0"
+  - "@opencode/client@2.2.0"
+  - "@opencode/plugin@2.2.0"
+  - "@opencode/protocol@2.2.0"
+  - "@opencode/schema@2.2.0"
+  - "@opencode/theme@2.2.0"
+  - "@opencode/util@2.2.0"
   - "@opentui/core-darwin-arm64@0.6.2"
   - "@opentui/core-darwin-x64@0.6.2"
   - "@opentui/core-linux-arm64-musl@0.6.2"
